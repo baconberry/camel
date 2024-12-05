@@ -106,6 +106,8 @@ public class RawPayloadTest extends AbstractSalesforceTestBase {
                             .setBody(
                                     "{ \"access_token\": \"mock_token\", \"id\": \"https://login.salesforce.com/id/00D4100000xxxxxxxx/0054100000xxxxxxxx\", \"instance_url\": \""
                                      + loginUrl + "\"}");
+                } else if (recordedRequest.getPath().equals("/services/data/v56.0/sobjects/Contact")) {
+                    return new MockResponse().setResponseCode(500);
                 } else {
                     return new MockResponse().setResponseCode(200)
                             .setHeader(HttpHeader.CONTENT_TYPE.toString(),
@@ -232,6 +234,10 @@ public class RawPayloadTest extends AbstractSalesforceTestBase {
                 from("direct:apexCallPatch")
                         .to("salesforce:apexCall/Merchandise/?rawPayload=true&format=" + format + "&apexMethod=PATCH");
 
+                from("direct:rawStatus500")
+                        .to("salesforce:raw?rawMethod=POST&rawPath=/services/data/v" + SalesforceEndpointConfig.DEFAULT_VERSION
+                                + "/sobjects/Contact");
+
                 // testComposite (only JSON format is supported)
                 if (format.equalsIgnoreCase("json")) {
                     from("direct:composite").to(
@@ -251,6 +257,7 @@ public class RawPayloadTest extends AbstractSalesforceTestBase {
                 "direct:upsertSObject",
                 "direct:deleteSObjectWithId", "direct:getBlobField", "direct:query", "direct:queryAll", "direct:search",
                 "direct:apexCallGet", "direct:apexCallGetWithId", "direct:apexCallPatch",
+                "direct:rawStatus500",
                 "direct:composite" };
 
         final String[] formats = { "XML", "JSON" };
